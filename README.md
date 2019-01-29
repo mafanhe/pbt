@@ -1,7 +1,9 @@
 ### PBT: Population Based Training
 
-Original paper: [Population Based Training of Neural Networks, Jaderberg et al.](https://arxiv.org/abs/1711.09846)
-This repo is forked from [MattKleinsmith's pbt repo](https://github.com/MattKleinsmith/pbt),differences or enhancement with it is: 1.implement by **tensorflow** 
+Original paper: [Population Based Training of Neural Networks, Jaderberg et al.](https://arxiv.org/abs/1711.09846)    
+This repo is forked from [MattKleinsmith's pbt repo](https://github.com/MattKleinsmith/pbt),differences or enhancement with it is:
+
+1.implement by **tensorflow**.    
 2.speed up trainning by **multiprocess**.
 
 ### What this code is
