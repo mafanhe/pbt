@@ -22,8 +22,9 @@ Steps:
 2. Edit config.py to set your options.
 3. Store your data as bcolz carrays. See datasets.py for an example.
 4. In a terminal, enter: `python main.py --exploiter`
-5. If you want to use a second GPU, then in a second terminal, enter: `python main.py --gpu 1 --population_id -1`, where "1" refers to your GPU's ID in nvidia-smi, and "-1" means to work on the most recently created population.
-
+5. run parameters： 
+  --population_id -1, where "1" refers to your GPU's ID in nvidia-smi, and "-1" means to work on the most recently created population.
+  --exploiter, Set this process as the exploiter. It will be responsible for running the exploit step over the entire population at the end of each interval. 
 When finished, the process will print the path to the weights of the best performing model.
 
 ### Figures for intuition
@@ -55,6 +56,6 @@ I produced these figures using an old and very different version of this repo. I
 
 Managing tasks via a sqlite database table.
 
-Each task corresponds to training a model for half an epoch. These tasks can be done in parallel. Once in a while the exploiter process truncates the worst-performing models, which blocks other processes from training models for a bit. That makes it 99% parallel instead of 100% parallel like random search.
+Each task corresponds to training a model for an epoch. These tasks run in parallel. Once in a while the exploiter process truncates the worst-performing models, which blocks other processes from training models for a bit. That makes it 99% parallel instead of 100% parallel like random search.
 
-Since this code is mostly about task management, it isn't very tied to a particular deep learning framework. With a little work, one could replace the PyTorch ties with TensorFlow. However, this assumes you have your hyperparameter space defined in your framework of choice, which is what you need for any hyperparameter optimization algorithm, including random search. As of this writing, the hyperparameter space in this code only has two dimensions: learning rate and momentum coefficient.
+Since this code is mostly about task management, it isn't very tied to a particular deep learning framework. With a little work, one could replace the Tensorflow ties with other framework. However, this assumes you have your hyperparameter space defined in your framework of choice, which is what you need for any hyperparameter optimization algorithm, including random search. As of this writing, the hyperparameter space in this code only has two dimensions: learning rate and momentum coefficient.
