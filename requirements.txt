@@ -1,0 +1,6 @@
+matplotlib
+pillow
+psutil
+pandas
+psycopg2
+tensorflow
