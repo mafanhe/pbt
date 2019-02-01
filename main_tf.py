@@ -13,7 +13,7 @@ import numpy as np
 import pickle
 import multiprocessing
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'  # or any {'0', '1', '2'}
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 HYPERPARAM_NAMES = ["lr", "momentum"]  # This is unfortunate.
 EPOCHS = 10
@@ -143,7 +143,7 @@ class Trainer:
         better_optimizer = better_trainer.model.optimizer
         # Assumption: Same LR and momentum for each param group
         # Perturb hyperparameters
-
+        # TODO
         param_group = better_optimizer.get_config()
         for hyperparam_name in hyperparam_names:
             perturb = np.random.choice(perturb_factors)
@@ -156,7 +156,7 @@ def init():
     global sess
     import tensorflow as tf
     import tensorflow.keras.backend as KTF
-    tf.logging.set_verbosity(tf.logging.DEBUG)
+
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
@@ -202,7 +202,7 @@ def exploit_and_explore(connect_str_or_path, population_id):
                               optimizer=optimizer)
         bot_checkpoint_path = (checkpoint_str %
                                (population_id, bottom_id))
-
+        # TODO BUG
         bot_trainer.load_checkpoint(bot_checkpoint_path)
         bot_trainer.exploit_and_explore(top_trainer,
                                         HYPERPARAM_NAMES)
@@ -286,7 +286,8 @@ def tran(x_train, y_train, x_test, y_test, epochs, batch_size, task_id, populati
 if __name__ == "__main__":
     # tf.logging.set_verbosity(tf.logging.WARN)
 
-    print("mian:",os.getpid())
+    # TODO: Does this help?
+    print("mian:", os.getpid())
 
     parser = argparse.ArgumentParser(description="Population Based Training")
     parser.add_argument("-p", "--population_id", type=int, default=None,
@@ -382,9 +383,10 @@ if __name__ == "__main__":
             # multiprocessing train  
             for task_id, intervals_trained, seed_for_shuffling in tasks:
                 pool.apply_async(tran, (
-                x_train, y_train, x_test, y_test, 1, BATCH_SIZE, task_id, population_id, ready_for_exploitation_False,
-                ready_for_exploitation_True, active_False, active_True, connect_str_or_path, intervals_trained,
-                seed_for_shuffling))
+                    x_train, y_train, x_test, y_test, 1, BATCH_SIZE, task_id, population_id,
+                    ready_for_exploitation_False,
+                    ready_for_exploitation_True, active_False, active_True, connect_str_or_path, intervals_trained,
+                    seed_for_shuffling))
             pool.close()
             pool.join()
             # time.sleep(10)

@@ -1,9 +1,9 @@
-import numpy as np
 import os
 import argparse
 import time
 import pathlib
 import multiprocessing
+import math
 from psycopg2.extensions import TransactionRollbackError
 from utils import (update_task, get_max_of_db_column,
                    get_task, ExploitationNeeded,
@@ -12,17 +12,21 @@ from utils import (update_task, get_max_of_db_column,
                    print_with_time, ExploitationOcurring,
                    create_new_population)
 from config import *
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # or any {'0', '1', '2'}
+
 from model import dnn_model
 from model import get_optimizer
 from trainer import Trainer
 from datasets import data
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # or any {'0', '1', '2'}
-
 
 def init():
     global tf
     global sess
+    global np
+
+    import numpy as np
     import tensorflow as tf
     import tensorflow.keras.backend as KTF
 
@@ -33,6 +37,7 @@ def init():
 
 
 def exploit_and_explore(connect_str_or_path, population_id):
+    global np
     intervals_trained_col = get_col_from_populations(
         connect_str_or_path, USE_SQLITE,
         population_id, "intervals_trained")
@@ -61,17 +66,18 @@ def exploit_and_explore(connect_str_or_path, population_id):
         model = dnn_model()
         optimizer = get_optimizer()
         top_trainer = Trainer(model=model,
-                              optimizer=optimizer)
-        top_checkpoint_path = (checkpoint_str %
+                              optimizer=optimizer,
+                              )
+        top_checkpoint_path = (CHECKPOINT_STR %
                                (population_id, top_id))
         top_trainer.load_checkpoint(top_checkpoint_path)
         model = dnn_model()
         optimizer = get_optimizer()
         bot_trainer = Trainer(model=model,
                               optimizer=optimizer)
-        bot_checkpoint_path = (checkpoint_str %
+        bot_checkpoint_path = (CHECKPOINT_STR %
                                (population_id, bottom_id))
-
+        # TODO BUG
         bot_trainer.load_checkpoint(bot_checkpoint_path)
         bot_trainer.exploit_and_explore(top_trainer,
                                         HYPERPARAM_NAMES)
@@ -101,7 +107,6 @@ def train(x_train, y_train, x_test, y_test, epochs, batch_size, task_id, populat
           connect_str_or_path,
           intervals_trained, seed_for_shuffling):
     # Train
-
     optimizer = get_optimizer()
     model = dnn_model()
 
@@ -112,7 +117,7 @@ def train(x_train, y_train, x_test, y_test, epochs, batch_size, task_id, populat
         batch_size=batch_size,
         task_id=task_id)
 
-    checkpoint_path = (checkpoint_str %
+    checkpoint_path = (CHECKPOINT_STR %
                        (population_id, task_id))
 
     if os.path.isfile(checkpoint_path):
@@ -167,8 +172,7 @@ if __name__ == "__main__":
     exploiter = args.exploiter
     (x_train, y_train), (x_test, y_test) = data()
     pathlib.Path('checkpoints').mkdir(exist_ok=True)
-    checkpoint_str = "checkpoints/pop-%03d_task-%03d.h5"
-    interval_limit = int(np.ceil(EPOCHS / EXPLOIT_INTERVAL))
+    interval_limit = int(math.ceil(EPOCHS / EXPLOIT_INTERVAL))
     table_name = "populations"
     if USE_SQLITE:
         sqlite_path = "database.sqlite3"
@@ -221,7 +225,7 @@ if __name__ == "__main__":
                                                            USE_SQLITE,
                                                            population_id)
                 print("Population finished. Best score: %.2f" % scores[0])
-                checkpoint_path = (checkpoint_str % (population_id, task_ids[0]))
+                checkpoint_path = (CHECKPOINT_STR % (population_id, task_ids[0]))
                 pre, suf = checkpoint_path.split('.')
                 weights_path = pre + "_weights." + suf
                 print("Best weights saved to: %s" % weights_path)
@@ -247,13 +251,14 @@ if __name__ == "__main__":
                 time.sleep(1)
                 continue
 
-            # multiprocessing train
             for task_id, intervals_trained, seed_for_shuffling in tasks:
-                pool.apply_async(train, (
+                result = pool.apply_async(train, (
                     x_train, y_train, x_test, y_test, 1, BATCH_SIZE, task_id, population_id,
                     ready_for_exploitation_False,
                     ready_for_exploitation_True, active_False, active_True, connect_str_or_path, intervals_trained,
                     seed_for_shuffling))
+                # debug error print
+                # result.get()
             pool.close()
             pool.join()
             # time.sleep(10)

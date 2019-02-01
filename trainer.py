@@ -1,4 +1,6 @@
-from utils import split_trn_val
+from tensorflow.keras.models import load_model
+from tensorflow.keras.callbacks import EarlyStopping
+import numpy as np
 
 
 class Trainer:
@@ -6,7 +8,7 @@ class Trainer:
     def __init__(self, model=None, optimizer=None, x_train=None, y_train=None, x_test=None, y_test=None,
                  epochs=1, batch_size=None, valid_size=0.2, task_id=None):
         """Note: Trainer objects don't know about the database."""
-
+        from utils import split_trn_val
         self.model = model
         self.optimizer = optimizer
         if x_train is not None:
@@ -24,32 +26,20 @@ class Trainer:
         self.task_id = task_id
 
     def save_checkpoint(self, checkpoint_path):
-        # checkpoint = dict(model_state_dict=self.model.get_weights(),
-        #                   optim_state_dict=self.optimizer.get_weights())
-        # save_obj(self.optimizer.get_params(),checkpoint_path+".params")
-        # torch.save(checkpoint, checkpoint_path)
         self.model.save(checkpoint_path)
 
     def load_checkpoint(self, checkpoint_path):
-        global tf
-
-        # checkpoint = torch.load(checkpoint_path)
-        # self.model.set_weights(checkpoint['model_state_dict'])
-        # params = load_obj(checkpoint_path+".params")
-        # self.optimizer.set_params_weights(params,checkpoint['optim_state_dict'])
-        self.model = tf.keras.models.load_model(checkpoint_path)
+        self.model = load_model(checkpoint_path)
 
     def train(self, second_half, seed_for_shuffling):
-        global tf
 
         print('Train(task % d) ' % self.task_id)
         # TODO shuffle train data
-        callbacks = [tf.keras.callbacks.EarlyStopping(
+        callbacks = [EarlyStopping(
             monitor='val_loss', patience=5)]
         self.model.compile(optimizer=self.optimizer,
                            loss='sparse_categorical_crossentropy',
                            metrics=['acc'])
-
         self.model.fit(self.x_train[self.trn_indices],
                        self.y_train[self.trn_indices],
                        epochs=self.epochs,
@@ -68,7 +58,6 @@ class Trainer:
 
     def exploit_and_explore(self, better_trainer, hyperparam_names,
                             perturb_factors=[1.2, 0.8]):
-        from numpy.random import choice
         """Copy parameters from the better model and the hyperparameters
            and running averages from the corresponding optimizer."""
         # Copy model parameters
@@ -79,9 +68,9 @@ class Trainer:
         better_optimizer = better_trainer.model.optimizer
         # Assumption: Same LR and momentum for each param group
         # Perturb hyperparameters
-
+        # TODO
         param_group = better_optimizer.get_config()
         for hyperparam_name in hyperparam_names:
-            perturb = choice(perturb_factors)
+            perturb = np.random.choice(perturb_factors)
             param_group[hyperparam_name] *= perturb
         self.optimizer = self.optimizer.from_config(param_group)

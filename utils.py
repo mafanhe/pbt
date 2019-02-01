@@ -18,7 +18,6 @@ from psycopg2.extensions import register_adapter, AsIs
 from psycopg2.sql import SQL, Identifier
 
 
-# TODO del not used fun
 def print_with_time(x):
     now = datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]
     print("%s: %s" % (now, x))

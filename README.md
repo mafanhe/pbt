@@ -23,7 +23,7 @@ Steps:
 1. Wrestle with dependencies.
 2. Edit config.py to set your options.
 3. Store your data as bcolz carrays. See datasets.py for an example.
-4. In a terminal, enter: `python main_tf.py --exploiter`
+4. In a terminal, enter: `python main.py --exploiter`
 5. run parameters： 
   --population_id -1, where "1" refers to your GPU's ID in nvidia-smi, and "-1" means to work on the most recently created population.
   --exploiter, Set this process as the exploiter. It will be responsible for running the exploit step over the entire population at the end of each interval. 

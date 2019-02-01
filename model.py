@@ -1,24 +1,27 @@
-from utils import choose
+# import numpy as np
 
 
 def dnn_model():
-    global tf
-    model = tf.keras.models.Sequential([
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Flatten, Dense, Dropout
+    from tensorflow.nn import relu, softmax
+    model = Sequential([
 
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
-        tf.keras.layers.Dense(512, activation=tf.nn.relu),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+        Flatten(input_shape=(28, 28)),
+        Dense(512, activation=relu),
+        Dropout(0.2),
+        Dense(10, activation=softmax)
     ])
     return model
 
 
 def get_optimizer():
-    global tf
-    from numpy import logspace, linspace
+    import numpy as np
+    from tensorflow.keras.optimizers import SGD
+    from utils import choose
     """This is where users choose their optimizer and define the
        hyperparameter space they'd like to search."""
-    optimizer_class = tf.keras.optimizers.SGD
-    lr = choose(logspace(-5, 0, base=10))
-    momentum = choose(linspace(0.1, .9999))
+    optimizer_class = SGD
+    lr = choose(np.logspace(-5, 0, base=10))
+    momentum = choose(np.linspace(0.1, .9999))
     return optimizer_class(lr=lr, momentum=momentum)
